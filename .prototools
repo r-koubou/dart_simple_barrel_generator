@@ -1,0 +1,4 @@
+dart = "stable"
+
+[plugins.tools]
+dart = "github://KonstantinKai/proto-dart-plugin"

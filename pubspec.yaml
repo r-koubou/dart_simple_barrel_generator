@@ -1,0 +1,14 @@
+name: simple_barrel_generator
+description: A simple barrel file generator for Dart/Flutter projects.
+version: 0.0.1
+platforms:
+  windows:
+  macos:
+  linux:
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  yaml: ^3.1.3
+  path: ^1.9.1

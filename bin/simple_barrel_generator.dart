@@ -1,63 +1,92 @@
 import 'dart:io';
 
+import 'package:args/args.dart';
 import 'package:path/path.dart' as p;
-import 'package:yaml/yaml.dart';
-
-final _defaultIncludeExtensions = ['.dart'];
-final _defaultExcludeExtensions = ['.g.dart', '.freezed.dart', '.part.dart'];
 
 void main(List<String> args) async {
-  if (args.isEmpty) {
-    usage();
+  try {
+    final config = await parseCommandArguments(args);
+    await generate(config);
+  } on ArgParserException catch (e) {
+    stderr.writeln('Error: $e');
+    exit(1);
+  } on ArgumentError catch (e) {
+    stderr.writeln('Error: $e');
     exit(1);
   }
+}
 
-  // load config from yaml file
-  final yamlText = await File(args[0]).readAsString();
-  final yaml = loadYaml(yamlText);
-  final config = BarrelConfig.fromYaml(yaml);
+Future<BarrelConfig> parseCommandArguments(Iterable<String> args) async {
+  final parser = ArgParser()
+    ..addOption('base-dir',
+        abbr: 'b', mandatory: true, help: 'The root directory of source files.')
+    ..addOption('barrel-prefix',
+        abbr: 'p', help: 'The prefix for the barrel file name.')
+    ..addOption('include-extensions',
+        abbr: 'i', help: 'Comma-separated list of file extensions to include.')
+    ..addOption('exclude-extensions',
+        abbr: 'e', help: 'Comma-separated list of file extensions to exclude.')
+    ..addFlag('help', abbr: 'h', help: 'Show usage.');
 
-  await generate(config);
+  final parseResult = parser.parse(args);
+
+  if (parseResult['help'] as bool) {
+    usage(parser.usage);
+    exit(0);
+  }
+
+  var config = BarrelConfig(
+      directory: parseResult['base-dir'] as String,
+      barrelPrefix: parseResult['barrel-prefix'] as String);
+
+  if (parseResult.wasParsed('include-extensions')) {
+    final includes = (parseResult['include-extensions'] as String)
+        .split(',')
+        .map((e) => e.trim())
+        .toList();
+    config = config.copyWith(includeExtensions: includes);
+  }
+  if (parseResult.wasParsed('exclude-extensions')) {
+    final excludes = (parseResult['exclude-extensions'] as String)
+        .split(',')
+        .map((e) => e.trim())
+        .toList();
+    config = config.copyWith(excludeExtensions: excludes);
+  }
+
+  return config;
 }
 
 Future<void> generate(BarrelConfig config) async {
-  for (final x in config.directories) {
-    final dirPath = p.join(config.baseDir, x);
-    final prefix = p.basename(dirPath);
-    await generateImpl(
-      packageDirectoryPath: dirPath,
-      preffix: prefix,
-      sourceDirectoryName: config.sourceDirectoryName,
-      includeExtensions: config.includeExtensions,
-      excludeExtensions: config.excludeExtensions,
-    );
-  }
+  await generateImpl(
+    directory: config.directory,
+    barrelPrefix: p.basename(config.barrelPrefix),
+    includeExtensions: config.includeExtensions,
+    excludeExtensions: config.excludeExtensions,
+  );
 }
 
 /// Generates a barrel file in the specified directory with the given prefix.
 Future<void> generateImpl({
-  required String packageDirectoryPath,
-  required String preffix,
-  required String sourceDirectoryName,
+  required String directory,
+  required String barrelPrefix,
   List<String> includeExtensions = const [],
   List<String> excludeExtensions = const [],
 }) async {
   final files = await collectSourceFiles(
-    p.join(packageDirectoryPath, sourceDirectoryName),
+    directory,
     includeExtensions: includeExtensions,
     excludeExtensions: excludeExtensions,
   );
 
-  final directoryPath = p.join(packageDirectoryPath, sourceDirectoryName);
-
   if (files.isEmpty) {
     stdout.writeln(
-      '[!] No source files found in $directoryPath. Skipping barrel generation.',
+      '[!] No source files found in $directory. Skipping barrel generation.',
     );
     return;
   }
 
-  final barrelFilePath = p.join(directoryPath, '$preffix.dart');
+  final barrelFilePath = p.join(directory, '$barrelPrefix.dart');
 
   final barrelFile = File(barrelFilePath);
   final sink = barrelFile.openWrite();
@@ -75,7 +104,7 @@ Future<void> generateImpl({
       if (file.path == barrelFilePath) {
         continue;
       }
-      final relativePath = p.relative(file.path, from: directoryPath);
+      final relativePath = p.relative(file.path, from: directory);
       sink.writeln("export '$relativePath';");
     }
   } finally {
@@ -116,56 +145,43 @@ Future<List<File>> collectSourceFiles(
 }
 
 /// Prints usage information.
-void usage() {
-  stdout.writeln('Usage: dart main.dart config yaml path>');
+void usage(String usageText) {
+  stdout.writeln(usageText);
 }
 
 /// Configuration for barrel file generation.
 class BarrelConfig {
-  final String baseDir;
-  final String sourceDirectoryName;
-  final List<String> directories;
+  static const String defaultPackageDirectory = '.';
+  static const defaultIncludeExtensions = ['.dart'];
+  static const defaultExcludeExtensions = [
+    '.g.dart',
+    '.freezed.dart',
+    '.part.dart'
+  ];
+
+  final String directory;
+  final String barrelPrefix;
   final List<String> includeExtensions;
   final List<String> excludeExtensions;
 
   BarrelConfig({
-    required this.baseDir,
-    required this.sourceDirectoryName,
-    required this.directories,
-    required this.includeExtensions,
-    required this.excludeExtensions,
+    required this.directory,
+    required this.barrelPrefix,
+    this.includeExtensions = defaultIncludeExtensions,
+    this.excludeExtensions = defaultExcludeExtensions,
   });
 
-  factory BarrelConfig.fromYaml(Map yaml) {
-    final includes = yaml['include_extensions'] ?? _defaultIncludeExtensions;
-    final excludes = yaml['exclude_extensions'] ?? _defaultExcludeExtensions;
-
+  BarrelConfig copyWith({
+    String? directory,
+    String? barrelPrefix,
+    List<String>? includeExtensions,
+    List<String>? excludeExtensions,
+  }) {
     return BarrelConfig(
-      baseDir: yaml['base_dir'] ?? '.',
-      sourceDirectoryName: yaml['source_directory_name'] ?? 'lib',
-      directories: List<String>.from(yaml['directories'] ?? []),
-      includeExtensions: includes,
-      excludeExtensions: excludes,
+      directory: directory ?? this.directory,
+      barrelPrefix: barrelPrefix ?? this.barrelPrefix,
+      includeExtensions: includeExtensions ?? this.includeExtensions,
+      excludeExtensions: excludeExtensions ?? this.excludeExtensions,
     );
-  }
-
-  @override
-  String toString() {
-    final StringBuffer sb = StringBuffer();
-
-    void toListString(StringBuffer sb, String title, List<String> items) {
-      sb.writeln('$title:');
-      for (final item in items) {
-        sb.writeln('  - $item');
-      }
-    }
-
-    sb.writeln('[${runtimeType.toString()}]');
-    sb.writeln('baseDir: $baseDir');
-    toListString(sb, 'directories', directories);
-    toListString(sb, 'includeExtensions', includeExtensions);
-    toListString(sb, 'excludeExtensions', excludeExtensions);
-
-    return sb.toString();
   }
 }

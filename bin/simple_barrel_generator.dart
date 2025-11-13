@@ -7,60 +7,76 @@ void main(List<String> args) async {
   try {
     final config = await parseCommandArguments(args);
     await generate(config);
-  } on ArgParserException catch (e) {
-    stderr.writeln('Error: $e');
+  } on ArgParserException catch (_) {
     exit(1);
-  } on ArgumentError catch (e) {
-    stderr.writeln('Error: $e');
+  } on ArgumentError catch (_) {
     exit(1);
   }
 }
 
 Future<BarrelConfig> parseCommandArguments(Iterable<String> args) async {
-  final parser = ArgParser()
-    ..addOption('base-dir',
-        abbr: 'b', mandatory: true, help: 'The root directory of source files.')
-    ..addOption('barrel-prefix',
-        abbr: 'p', help: 'The prefix for the barrel file name.')
-    ..addOption('include-extensions',
-        abbr: 'i', help: 'Comma-separated list of file extensions to include.')
-    ..addOption('exclude-extensions',
-        abbr: 'e', help: 'Comma-separated list of file extensions to exclude.')
-    ..addFlag('help', abbr: 'h', help: 'Show usage.');
+  final parser = ArgParser();
 
-  final parseResult = parser.parse(args);
+  try {
+    parser
+      ..addOption('base-dir',
+          abbr: 'b',
+          mandatory: true,
+          help: 'The root directory of source files.')
+      ..addOption('prefix',
+          abbr: 'p',
+          help: 'The prefix for the barrel file name.',
+          mandatory: true)
+      ..addOption('include-extensions',
+          abbr: 'i',
+          help: 'Comma-separated list of file extensions to include.')
+      ..addOption('exclude-extensions',
+          abbr: 'e',
+          help: 'Comma-separated list of file extensions to exclude.')
+      ..addFlag('help', abbr: 'h', help: 'Show usage.', negatable: false);
 
-  if (parseResult['help'] as bool) {
+    final parseResult = parser.parse(args);
+
+    if (parseResult['help'] as bool) {
+      usage(parser.usage);
+      exit(0);
+    }
+
+    var config = BarrelConfig(
+        directory: parseResult['base-dir'] as String,
+        prefix: parseResult['prefix'] as String);
+
+    if (parseResult.wasParsed('include-extensions')) {
+      final includes = (parseResult['include-extensions'] as String)
+          .split(',')
+          .map((e) => e.trim())
+          .toList();
+      config = config.copyWith(includeExtensions: includes);
+    }
+    if (parseResult.wasParsed('exclude-extensions')) {
+      final excludes = (parseResult['exclude-extensions'] as String)
+          .split(',')
+          .map((e) => e.trim())
+          .toList();
+      config = config.copyWith(excludeExtensions: excludes);
+    }
+
+    return config;
+  } on ArgParserException catch (e) {
+    stderr.writeln('Error: ${e.message}');
     usage(parser.usage);
-    exit(0);
+    rethrow;
+  } on ArgumentError catch (e) {
+    stderr.writeln('Error: ${e.message}');
+    usage(parser.usage);
+    rethrow;
   }
-
-  var config = BarrelConfig(
-      directory: parseResult['base-dir'] as String,
-      barrelPrefix: parseResult['barrel-prefix'] as String);
-
-  if (parseResult.wasParsed('include-extensions')) {
-    final includes = (parseResult['include-extensions'] as String)
-        .split(',')
-        .map((e) => e.trim())
-        .toList();
-    config = config.copyWith(includeExtensions: includes);
-  }
-  if (parseResult.wasParsed('exclude-extensions')) {
-    final excludes = (parseResult['exclude-extensions'] as String)
-        .split(',')
-        .map((e) => e.trim())
-        .toList();
-    config = config.copyWith(excludeExtensions: excludes);
-  }
-
-  return config;
 }
 
 Future<void> generate(BarrelConfig config) async {
   await generateImpl(
     directory: config.directory,
-    barrelPrefix: p.basename(config.barrelPrefix),
+    barrelPrefix: p.basename(config.prefix),
     includeExtensions: config.includeExtensions,
     excludeExtensions: config.excludeExtensions,
   );
@@ -146,6 +162,7 @@ Future<List<File>> collectSourceFiles(
 
 /// Prints usage information.
 void usage(String usageText) {
+  stdout.writeln('Usage: dart run simple_barrel_generator <options>');
   stdout.writeln(usageText);
 }
 
@@ -160,13 +177,13 @@ class BarrelConfig {
   ];
 
   final String directory;
-  final String barrelPrefix;
+  final String prefix;
   final List<String> includeExtensions;
   final List<String> excludeExtensions;
 
   BarrelConfig({
     required this.directory,
-    required this.barrelPrefix,
+    required this.prefix,
     this.includeExtensions = defaultIncludeExtensions,
     this.excludeExtensions = defaultExcludeExtensions,
   });
@@ -179,7 +196,7 @@ class BarrelConfig {
   }) {
     return BarrelConfig(
       directory: directory ?? this.directory,
-      barrelPrefix: barrelPrefix ?? this.barrelPrefix,
+      prefix: barrelPrefix ?? prefix,
       includeExtensions: includeExtensions ?? this.includeExtensions,
       excludeExtensions: excludeExtensions ?? this.excludeExtensions,
     );

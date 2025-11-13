@@ -1,4 +1,4 @@
-dart = "stable"
+dart = "^3.9 <4.0.0"
 
 [plugins.tools]
 dart = "github://KonstantinKai/proto-dart-plugin"

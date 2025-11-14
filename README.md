@@ -7,43 +7,33 @@ A simple Dart barrel file generator tool.
 Add dependency in your `pubspec.yaml`:
 
 ```yaml
-dependencies:
+dev_dependencies:
   simple_barrel_generator: ^0.0.1
 ```
 
 ## Usage
 
 ```bash
-dart simple_barrel_generator/main.dart <config_file.yaml>
+dart simple_barrel_generator/main.dart <Options>
 ```
 
-## Yaml Configuration
+| Option                   | Required | Description                                         | Default                                  |
+| ------------------------ | -------- | --------------------------------------------------- | ---------------------------------------- |
+| -b, --base-dir           | Yes      | The root directory of source files.                 | -                                        |
+| -p, --prefix             | Yes      | The prefix for the barrel file name.                | -                                        |
+| -i, --include-extensions | No       | Comma-separated list of file extensions to include. | `.dart`                                  |
+| -e, --exclude-extensions | No       | Comma-separated list of file extensions to exclude. | `.g.dart`, `.freezed.dart`, `.part.dart` |
+| -h, --help               | No       | Show usage.                                         | -                                        |
 
-- baseDir
-  - The base directory where the packages are located. (default is `. (current directory)`).
-- sourceDirectoryName
-  - The name of the source directory within each package (default is `lib`).
-- directories
-  - List of package directories to generate barrel files for.
-- includeExtensions
-  - List of file extensions to include. (default:`.dart`).
-- excludeExtensions
-  - List of file extensions to exclude. (default: `[.g.dart. freezed.dart, .part.dart]`).
 
 ---
 
 ## Example
 
-```yaml
-base_dir: packages
-directories:
-  - commons
-  - ui
-```
 
 ### Directory Structure
 
-Generator will create barrel files in the `lib` directories of `packages/commons` and `packages/ui`.
+Generator will create barrel files in the `lib` directories of `packages/commons`
 
 ```
 packages/
@@ -55,9 +45,18 @@ packages/
       commons.dart      <-- generated barrel file
 ```
 
-commons.dart:
+### Command
+
+```bash
+dart simple_barrel_generator/main.dart -b packages/commons/lib -p commons
+```
+
+`commons.dart` will be generated in `packages/commons/lib/` with the following content:
+
 
 ```dart
+library;
+
 export 'src/file1.dart';
 export 'src/file2.dart';
 ```

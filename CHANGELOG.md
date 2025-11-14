@@ -3,5 +3,5 @@ CHANGELOG
 
 ## v 0.0.1
 
-- Initial release
+- 1st release
 

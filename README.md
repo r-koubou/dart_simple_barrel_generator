@@ -11,6 +11,12 @@ dev_dependencies:
   simple_barrel_generator: ^0.0.1
 ```
 
+or install it globally:
+
+```bash
+dart pub global activate simple_barrel_generator
+```
+
 ## Usage
 
 ```bash

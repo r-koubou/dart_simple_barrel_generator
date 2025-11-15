@@ -12,6 +12,10 @@ platforms:
 executables:
   simple_barrel_generator:
 
+topics:
+  - codegen
+  - barrel
+
 environment:
   sdk: '>=3.0.0 <4.0.0'
 

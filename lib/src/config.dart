@@ -2,9 +2,9 @@ class Config {
   static const String defaultPackageDirectory = '.';
   static const defaultIncludes = ['**.dart'];
   static const defaultExcludes = [
-    '**/*.g.dart',
-    '**/*.freezed.dart',
-    '**/*.part.dart'
+    '**.g.dart',
+    '**.freezed.dart',
+    '**.part.dart'
   ];
 
   final String directory;

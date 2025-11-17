@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:glob/glob.dart';
 import 'package:logging/logging.dart';
+import 'package:path/path.dart' as path;
 import 'package:simple_barrel_generator/src/config.dart';
 
 class FileCollector {
@@ -29,17 +30,19 @@ class FileCollector {
         continue;
       }
 
-      Logger.root.fine('Checking file: ${entity.path}');
+      final normalizedFilePath = path.normalize(path.absolute(entity.path));
 
-      if (excludeGlobs.any((glob) => glob.matches(entity.path))) {
+      Logger.root.fine('Checking file: $normalizedFilePath');
+
+      if (excludeGlobs.any((glob) => glob.matches(normalizedFilePath))) {
         Logger.root.fine('Found in exclude patterns: ${entity.path}');
         continue;
       }
 
       if (!includeGlobs.any((glob) {
         Logger.root.fine('include pattern: $glob');
-        Logger.root.fine('matched: ${glob.matches(entity.path)}');
-        return glob.matches(entity.path);
+        Logger.root.fine('matched: ${glob.matches(normalizedFilePath)}');
+        return glob.matches(normalizedFilePath);
       })) {
         Logger.root.fine('Not found in include patterns: ${entity.path}');
         continue;
@@ -57,7 +60,9 @@ class FileCollector {
   List<Glob> _createGlobs(String directoryPath, List<String> patterns) {
     final globs = <Glob>[];
     for (final pattern in patterns) {
-      globs.add(Glob(pattern));
+      final globPath =
+          path.join(path.normalize(path.absolute(directoryPath)), pattern);
+      globs.add(Glob(globPath));
     }
     return globs;
   }

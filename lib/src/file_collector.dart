@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:glob/glob.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
-import 'package:simple_barrel_generator/src/config.dart';
+
+import './config.dart';
+import './path_util.dart';
 
 class FileCollector {
   /// Collects all Dart source files in the given directory recursively.
@@ -30,7 +32,7 @@ class FileCollector {
         continue;
       }
 
-      final normalizedFilePath = path.normalize(path.absolute(entity.path));
+      final normalizedFilePath = notmalizeAbsPathAsPosix(entity.path);
 
       Logger.root.fine('Checking file: $normalizedFilePath');
 
@@ -61,7 +63,7 @@ class FileCollector {
     final globs = <Glob>[];
     for (final pattern in patterns) {
       final globPath =
-          path.join(path.normalize(path.absolute(directoryPath)), pattern);
+          notmalizeAbsPathAsPosix(path.join(directoryPath, pattern));
       globs.add(Glob(globPath));
     }
     return globs;

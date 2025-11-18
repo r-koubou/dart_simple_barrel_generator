@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 
 import 'config.dart';
+import 'path_util.dart';
 
 class BarrelFileGenerator {
   Future<void> generate(Config config, List<File> files) async {
@@ -29,7 +30,9 @@ class BarrelFileGenerator {
         if (file.path == barrelFilePath) {
           continue;
         }
-        final relativePath = path.relative(file.path, from: directory);
+        final relativePath =
+            toPosixPath(path.relative(file.path, from: directory));
+
         sink.writeln("export '$relativePath';");
       }
     } finally {

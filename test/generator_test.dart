@@ -108,8 +108,8 @@ void main() {
 
       final files = await collector.collect(config);
       final generator = BarrelFileGenerator();
-      expect(
-          () async => await generator.generate(config, files), returnsNormally);
+
+      await generator.generate(config, files);
 
       final barrelFile =
           File(path.join(testDataLibDir, '${config.prefix}.dart'));

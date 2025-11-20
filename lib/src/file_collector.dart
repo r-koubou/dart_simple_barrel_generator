@@ -32,7 +32,7 @@ class FileCollector {
         continue;
       }
 
-      final normalizedFilePath = notmalizeAbsPathAsPosix(entity.path);
+      final normalizedFilePath = normalizeAbsPathAsPosix(entity.path);
 
       Logger.root.fine('Checking file: $normalizedFilePath');
 
@@ -63,7 +63,7 @@ class FileCollector {
     final globs = <Glob>[];
     for (final pattern in patterns) {
       final globPath =
-          notmalizeAbsPathAsPosix(path.join(directoryPath, pattern));
+          normalizeAbsPathAsPosix(path.join(directoryPath, pattern));
       globs.add(Glob(globPath));
     }
     return globs;

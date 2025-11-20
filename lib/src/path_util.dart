@@ -4,6 +4,6 @@ String toPosixPath(String pathName) {
   return pathName.replaceAll(r'\', '/');
 }
 
-String notmalizeAbsPathAsPosix(String pathName) {
+String normalizeAbsPathAsPosix(String pathName) {
   return toPosixPath(path.normalize(path.absolute(pathName)));
 }

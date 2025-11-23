@@ -7,6 +7,7 @@ import 'package:path/path.dart' as path;
 import './config.dart';
 import './path_util.dart';
 
+/// A file collector that collects Dart source files based on the given [Config].
 class FileCollector {
   /// Collects all Dart source files in the given directory recursively.
   Future<List<File>> collect(Config config) async {

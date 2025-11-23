@@ -31,7 +31,7 @@ class BarrelFileGenerator {
           continue;
         }
         final relativePath =
-            toPosixPath(path.relative(file.path, from: directory));
+            toPosixPathSeparator(path.relative(file.path, from: directory));
 
         sink.writeln("export '$relativePath';");
       }

@@ -1,9 +1,9 @@
 import 'package:path/path.dart' as path;
 
-String toPosixPath(String pathName) {
+String toPosixPathSeparator(String pathName) {
   return pathName.replaceAll(r'\', '/');
 }
 
 String normalizeAbsPathAsPosix(String pathName) {
-  return toPosixPath(path.normalize(path.absolute(pathName)));
+  return toPosixPathSeparator(path.normalize(path.absolute(pathName)));
 }

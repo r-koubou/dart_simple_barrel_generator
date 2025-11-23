@@ -27,7 +27,7 @@ class BarrelFileGenerator {
 
       for (final file in files) {
         // Skip the barrel file itself
-        if (file.path == barrelFilePath) {
+        if (path.absolute(file.path) == path.absolute(barrelFile.path)) {
           continue;
         }
         final relativePath =

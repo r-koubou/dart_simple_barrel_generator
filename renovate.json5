@@ -5,8 +5,8 @@
     ":timezone(Asia/Tokyo)"
   ],
   "schedule": [
-    // weekend
-    "* * * * 0,6"
+    // Schedule daily before 4 AM
+    "* 0-3 * * *"
   ],
   "enabledManagers": [
     "pub"

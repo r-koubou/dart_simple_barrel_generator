@@ -4,6 +4,10 @@
     "config:recommended",
     ":timezone(Asia/Tokyo)"
   ],
+  "schedule": [
+    // weekend
+    "* * * * 0,6"
+  ],
   "enabledManagers": [
     "pub"
   ],

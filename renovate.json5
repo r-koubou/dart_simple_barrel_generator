@@ -1,0 +1,22 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":timezone(Asia/Tokyo)"
+  ],
+  "schedule": [
+    // Schedule daily before 4 AM
+    "* 0-3 * * *"
+  ],
+  "enabledManagers": [
+    "pub"
+  ],
+  "rebaseWhen": "never",
+  "lockFileMaintenance": {
+    "enabled": true
+  },
+  "dependencyDashboard": true,
+  "baseBranchPatterns": [
+    "develop"
+  ]
+}
